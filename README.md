@@ -1,167 +1,242 @@
+📊 Northwind Business Intelligence Project
+📌 Overview
 
-📊 Projet Business Intelligence Northwind
+This project implements a complete Business Intelligence (BI) pipeline using the Northwind database as a case study.
+It covers the full BI lifecycle: ETL (Extract, Transform, Load), Data Warehouse modeling, OLAP analysis, and interactive dashboards.
 
-📝 Description du Projet
+The goal is to transform operational data into decision-support information through a structured Data Warehouse and advanced visual analytics.
 
-Ce projet implémente une solution de Business Intelligence (BI) de bout en bout basée sur le célèbre jeu de données Northwind Traders. L'objectif est de transformer des données transactionnelles brutes en informations décisionnelles exploitables via un Data Warehouse et des tableaux de bord interactifs.
+🎯 Objectives
 
-🚀 Fonctionnalités Clés
+Extract data from SQL Server and Microsoft Access
 
-Pipeline ETL Automatisé : Scripts Python pour extraire, nettoyer et transformer les données.
+Clean, transform, and integrate data using Python
 
-Data Warehouse (DWH) : Modélisation dimensionnelle en Schéma en Étoile (Star Schema).
+Build a Data Warehouse (Star Schema)
 
-Analyse Multidimensionnelle (OLAP) : Cube de données visualisé en 3D (Année x Client x Employé).
+Compute Key Performance Indicators (KPIs)
 
-Tableau de Bord Interactif : KPIs financiers, carte géographique des ventes et analyse des livraisons.
+Perform OLAP multidimensional analysis
 
-🏗️ Architecture Technique
+Create interactive dashboards using Plotly
 
-Le projet suit une architecture BI classique en 3 couches :
+Ensure data quality and validation
 
-Extraction (E) : Récupération des données sources (Fichiers CSV / Access).
-
-Transformation (T) :
-
-Nettoyage des données (Gestion des NULLs, formatage des dates).
-
-Création des Dimensions (DimClient, DimEmployee, DimProduct, DimDate).
-
-Création de la Table de Faits (FactSales).
-
-Chargement (L) : Stockage des données structurées dans une base SQLite (northwind_dwh.db).
-
-Visualisation : Utilisation de Plotly et Jupyter Notebooks.
-
-📂 Structure du Projet
-code
-Text
-download
-content_copy
-expand_less
-Northwind_project/
+🗂️ Project Structure
+Northwind_project_BI/
 │
 ├── data/
-│   ├── raw/                 # Données sources brutes (Orders.csv, Customers.csv...)
-│   ├── processed/           # Fichiers nettoyés et transformés (CSVs intermédiaires)
-│   └── warehouse/           # Base de données finale (northwind_dwh.db) et logs
-│
-├── figures/                # Rapports générés (Graphiques HTML et images PNG)
-│
-├── notebooks/
-│   ├── exploration.ipynb     # Analyse exploratoire des données (EDA)
-│   ├── etl_dev.ipynb         # Environnement de test pour le développement ETL
-│   ├── modelling.ipynb       # Documentation du schéma en étoile
-│   ├── verification.ipynb    # Tests de cohérence des données
-│   └── dashboard_analysis.ipynb # 📊 LE DASHBOARD PRINCIPAL
+│   ├── raw/           # Extracted raw CSV files
+│   ├── staging/       # Cleaned and transformed data
+│   └── warehouse/     # Final Data Warehouse tables (CSV / Parquet)
 │
 ├── scripts/
-│   ├── extract_data.py      # Extraction des sources
-│   ├── transform_data.py    # Logique de transformation (Star Schema)
-│   ├── load_dwh.py          # Chargement en base de données
-│   ├── visualize_3d.py      # Génération du Cube OLAP 3D et rapports HTML
-│   └── etl_main.py          # 🚀 Script maître pour lancer tout le pipeline
+│   ├── extract_data.py
+│   ├── transform_data.py
+│   ├── load_dwh.py
+│   └── etl_main.py
 │
-├── requirements.txt         # Liste des dépendances Python
-└── README.md                # Documentation du projet
-⚙️ Installation et Configuration
-1. Prérequis
+├── notebooks/
+│   └── dashboard.ipynb
+│
+├── figures/
+│   └── dashboard.png
+│
+├── reports/
+│   └── Rapport_BI_Northwind_ING3_Final.pdf
+│
+├── videos/
+│   └── video.mp4
+│
+└── README.md
 
-Python 3.8 ou supérieur installé.
+🔄 ETL Process
+1️⃣ Extraction
 
-Git (optionnel, pour cloner le projet).
+Data extracted from:
 
-2. Installation
+SQL Server (Northwind)
 
-Ouvrez votre terminal et exécutez les commandes suivantes :
+Microsoft Access (Northwind 2012.accdb)
 
-code
-Bash
-download
-content_copy
-expand_less
-# 1. Cloner le dépôt (si applicable)
-git clone https://github.com/tedjeddine22/Northwind_project.git
-cd Northwind_project
+Stored as CSV files in data/raw/
 
-# 2. Créer un environnement virtuel (recommandé)
-python -m venv venv
-# Sur Windows :
-venv\Scripts\activate
-# Sur Mac/Linux :
-source venv/bin/activate
+2️⃣ Transformation
 
-# 3. Installer les dépendances
-pip install -r requirements.txt
-▶️ Utilisation
-Étape 1 : Exécuter le Pipeline ETL
+Column normalization
 
-Pour mettre à jour les données (Extraction -> Transformation -> Chargement DWH), lancez le script maître :
+Duplicate removal
 
-code
-Bash
-download
-content_copy
-expand_less
+Null value handling
+
+Key harmonization
+
+Business metrics calculation (e.g. total_amount)
+
+Creation of surrogate keys
+
+3️⃣ Load
+
+Data loaded into the Data Warehouse
+
+Output formats:
+
+CSV
+
+Parquet
+
+Automatic schema generation
+
+🧱 Data Warehouse Model
+⭐ Star Schema
+
+Fact table: FactSales
+
+Dimensions:
+
+DimDate
+
+DimClient
+
+DimEmployee
+
+The schema is illustrated in schema_etoile.png.
+
+📈 Dashboards & Analytics
+KPIs
+
+Total revenue
+
+Number of orders
+
+Delivered vs non-delivered orders
+
+Visualizations
+
+Delivery status (Green / Red)
+
+Delivery performance by employee
+
+Geographic sales distribution
+
+Heatmaps (Employee × Time, Client × Time)
+
+OLAP 3D analysis:
+
+X: Date (Year / Month)
+
+Y: Client
+
+Z: Employee
+
+Color: Total sales
+
+All dashboards are implemented using Plotly.
+
+🔍 Notebooks Description
+📘 exploration.ipynb
+
+Preview raw tables
+
+Basic statistics
+
+Initial data quality checks
+
+📘 modelling.ipynb
+
+Star Schema explanation
+
+Dimension and fact creation
+
+Schema visualization
+
+📘 dashboard.ipynb
+
+KPI computation
+
+Interactive charts
+
+OLAP 3D visualization
+
+Geographic and heatmap analysis
+
+📘 verification.ipynb
+
+Null values check
+
+Duplicate detection
+
+Raw vs Data Warehouse row comparison
+
+✅ Data Validation
+
+Primary key uniqueness
+
+Missing values detection
+
+Consistency between raw data and Data Warehouse
+
+🛠️ Technologies Used
+
+Python
+
+Pandas
+
+SQLAlchemy
+
+PyODBC
+
+Plotly
+
+Jupyter Notebook
+
+SQL Server
+
+Microsoft Access
+
+🚀 How to Run the Project
+
+Install dependencies:
+
+pip install pandas pyodbc sqlalchemy plotly pyarrow
+
+
+Run the ETL pipeline:
+
 python scripts/etl_main.py
 
-Vérifiez les logs dans le terminal pour confirmer le succès ("✅ PIPELINE ETL TERMINÉ").
 
-Étape 2 : Générer les Visualisations (Rapports HTML)
+Open notebooks:
 
-Pour créer les graphiques interactifs (Cube 3D, Graphes de livraison) sauvegardés dans le dossier figures/ :
+jupyter notebook
 
-code
-Bash
-download
-content_copy
-expand_less
-python scripts/visualize_3d.py
 
-Ouvrez ensuite le fichier figures/3d_olap_scatter.html dans votre navigateur.
+Explore dashboards in dashboard.ipynb
 
-Étape 3 : Explorer le Dashboard
+🎓 Academic Context
 
-Pour une analyse interactive, lancez Jupyter et ouvrez le dashboard :
+Level: ING3
 
-code
-Bash
-download
-content_copy
-expand_less
-jupyter notebook notebooks/dashboard_analysis.ipynb
-📊 Modèle de Données (Star Schema)
+Module: Business Intelligence
 
-Le Data Warehouse est structuré autour de la table de faits centrale :
+Case Study: Northwind
 
-FactSales : Contient les métriques (Quantity, TotalAmount) et les clés étrangères.
+Focus: Data Warehouse, OLAP, Decision Support Systems
 
-DimDate : Axe temporel (Année, Mois, Trimestre).
+🔮 Future Improvements
 
-DimClient : Axe client (Nom, Ville, Pays).
+Add Product and Supplier dimensions
 
-DimEmployee : Axe performance vendeur (Nom, Titre).
+Implement Slowly Changing Dimensions (SCD)
 
-DimProduct : Axe produit (Nom, Catégorie).
+Deploy dashboards as a web app (Streamlit / Dash)
 
-📈 Aperçu des Visualisations
+Integrate predictive analytics (Machine Learning)
 
-Le projet inclut des visualisations avancées :
+Build a real OLAP cube (SSAS)
 
-KPIs Financiers : Chiffre d'affaires global, Panier moyen.
+👤 Author
 
-Cube OLAP 3D : Visualisation unique permettant de croiser 3 dimensions (Temps, Géographie, Ressource Humaine) en un seul graphique rotatif.
-
-Analyse Géographique : Carte choroplèthe des ventes mondiales ou Top Villes.
-
-Performance Logistique : Répartition des commandes Livrées vs Non Livrées.
-
-👤 Auteur
-
-BOUDERBA / Tadj eddine
-
-Matricule : 222231244012
-
-Étudiant en 3eme année ingénierie informatique cybersécurité / Business Intelligence
-
-Projet réalisé dans le cadre du module Business Intelligence.
+Tadj Eddine BOUDERBA    222231244012
+Computer Engineering – Cybersecurity
+ING3 – Business Intelligence Project
