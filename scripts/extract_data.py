@@ -1,46 +1,64 @@
-import pandas as pd
 import os
-from database_connect import DatabaseConnector
-import logging
+import pandas as pd
+from database_connect import get_sql_engine, get_access_connection
+from config import RAW_DIR
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+os.makedirs(RAW_DIR, exist_ok=True)
 
-class DataExtractor:
-    def __init__(self):
-        self.db = DatabaseConnector()
-        # Chemin absolu pour éviter les erreurs de dossier
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.raw_dir = os.path.join(base_dir, 'data', 'raw')
-        os.makedirs(self.raw_dir, exist_ok=True)
-    
-    def extract_from_access(self):
-        """Extraction depuis Access (ou Excel si Access échoue)"""
-        logger.info("📥 Tentative d'extraction...")
-        
-        # Liste des tables à extraire
-        tables = ['Orders', 'Customers', 'Employees', 'Order Details', 'Products', 'Categories']
-        
-        conn = self.db.connect_access()
-        if conn:
-            try:
-                for table in tables:
-                    # Gestion des espaces dans les noms de table Access
-                    query_table = f"[{table}]"
-                    df = pd.read_sql(f'SELECT * FROM {query_table}', conn)
-                    # Sauvegarde
-                    safe_name = table.replace(" ", "_")
-                    df.to_csv(os.path.join(self.raw_dir, f'{safe_name}.csv'), index=False, encoding='utf-8')
-                    logger.info(f"✅ {table} extrait : {len(df)} lignes")
-                conn.close()
-                return True
-            except Exception as e:
-                logger.error(f"❌ Erreur lors de l'extraction Access: {e}")
-                return False
-        else:
-            logger.warning("⚠️ Impossible de se connecter à Access. Assurez-vous que le fichier est dans /data/")
-            return False
+# ⚠️ Northwind contient "Order Details" (avec espace)
+TABLES = [
+    "Orders",
+    "Customers",
+    "Employees",
+    "Order Details",
+    "Shippers",
+    "Territories",
+    "EmployeeTerritories",
+    "Region",
+]
+
+def _safe_name(table: str) -> str:
+    return table.replace(" ", "_").lower()
+
+def extract_from_sql_server():
+    engine = get_sql_engine()
+    if engine is None:
+        return
+
+    for table in TABLES:
+        try:
+            query = f"SELECT * FROM [{table}]"   # ALWAYS bracket (safe)
+            df = pd.read_sql(query, engine)
+
+            file_name = f"sql_{_safe_name(table)}.csv"
+            out_path = os.path.join(RAW_DIR, file_name)
+            df.to_csv(out_path, index=False)
+
+            print(f"SQL Server: {table} -> {file_name} ({len(df)} rows)")
+        except Exception as e:
+            print(f"❌ SQL Server Error ({table}): {e}")
+
+def extract_from_access():
+    conn = get_access_connection()
+    if conn is None:
+        return
+
+    for table in TABLES:
+        try:
+            query = f"SELECT * FROM [{table}]"
+            df = pd.read_sql(query, conn)
+
+            file_name = f"access_{_safe_name(table)}.csv"
+            out_path = os.path.join(RAW_DIR, file_name)
+            df.to_csv(out_path, index=False)
+
+            print(f"Access:     {table} -> {file_name} ({len(df)} rows)")
+        except Exception as e:
+            print(f"❌ Access Error ({table}): {e}")
+
+    conn.close()
 
 if __name__ == "__main__":
-    extractor = DataExtractor()
-    extractor.extract_from_access()
+    extract_from_sql_server()
+    extract_from_access()
+    print("\n✅ Extraction Complete!")

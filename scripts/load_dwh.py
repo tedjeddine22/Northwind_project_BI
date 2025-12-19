@@ -1,76 +1,72 @@
-import pandas as pd
 import os
-import logging
-from sqlalchemy import create_engine
+import pandas as pd
+from config import STAGING_DIR, WAREHOUSE_DIR
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+os.makedirs(WAREHOUSE_DIR, exist_ok=True)
 
-class DWLoader:
-    def __init__(self):
-        # Définition des chemins relatifs
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.processed_dir = os.path.join(base_dir, 'data', 'processed')
-        self.warehouse_dir = os.path.join(base_dir, 'data', 'warehouse')
-        
-        # On crée le dossier warehouse s'il n'existe pas
-        os.makedirs(self.warehouse_dir, exist_ok=True)
+def generate_schema_sql(tables: dict[str, pd.DataFrame]):
+    pks = {
+        "DimDate": "sk_date",
+        "DimClient": "sk_client",
+        "DimEmployee": "sk_employee",
+        "FactSales": "fact_id",
+    }
 
-    def load_local(self):
-        """
-        Charge les données uniquement sous forme de fichiers (CSV) 
-        et crée une base locale SQLite (fichier .db) pour valider l'étape DWH.
-        Ne nécessite AUCUN serveur SQL installé.
-        """
-        logger.info("📦 DÉBUT DU CHARGEMENT (Mode Local / Sans Serveur)...")
+    sql_statements = []
+    print("... Generating schema.sql")
 
-        # Liste des fichiers à déplacer
-        files_mapping = {
-            'DimDate.csv': 'DimDate',
-            'DimClient.csv': 'DimClient',
-            'DimEmployee.csv': 'DimEmployee',
-            'DimProduct.csv': 'DimProduct',
-            'FactSales.csv': 'FactSales'
-        }
-
-        # On prépare un moteur SQLite local (c'est juste un fichier, pas de serveur à installer)
-        # Cela permet d'avoir une "base de données" pour le projet sans les soucis de connexion.
-        db_path = os.path.join(self.warehouse_dir, 'northwind_dwh.db')
-        engine = create_engine(f'sqlite:///{db_path}')
-
-        success_count = 0
-
-        for filename, table_name in files_mapping.items():
-            source_path = os.path.join(self.processed_dir, filename)
-            dest_csv_path = os.path.join(self.warehouse_dir, filename)
-            
-            if os.path.exists(source_path):
-                try:
-                    # 1. Lire le fichier traité
-                    df = pd.read_csv(source_path)
-                    
-                    # 2. Sauvegarder en CSV dans le warehouse (Fichiers finaux)
-                    df.to_csv(dest_csv_path, index=False)
-                    logger.info(f"  📄 CSV copié : {filename}")
-                    
-                    # 3. Sauvegarder dans la base de données locale (SQLite)
-                    # Cela valide la case "Data Warehouse" du projet sans serveur complexe
-                    df.to_sql(table_name, engine, if_exists='replace', index=False)
-                    logger.info(f"  💾 Table SQL locale créée : {table_name}")
-                    
-                    success_count += 1
-                except Exception as e:
-                    logger.error(f"  ❌ Erreur sur {filename}: {e}")
+    for table_name, df in tables.items():
+        cols_sql = []
+        for col, dtype in df.dtypes.items():
+            dt = str(dtype).lower()
+            if "int" in dt:
+                sql_type = "INT"
+            elif "float" in dt:
+                sql_type = "DECIMAL(10,2)"
+            elif "datetime" in dt:
+                sql_type = "DATE"
             else:
-                logger.warning(f"  ⚠️ Fichier source introuvable : {filename}")
+                sql_type = "VARCHAR(255)"
 
-        if success_count == len(files_mapping):
-            logger.info("✅ CHARGEMENT TERMINÉ AVEC SUCCÈS")
-            logger.info(f"📁 Vos données sont dans : {self.warehouse_dir}")
-            logger.info(f"🗄️ Base de données locale créée : {db_path}")
-        else:
-            logger.warning("⚠️ Chargement terminé avec des manquements.")
+            if col == pks.get(table_name):
+                sql_type += " PRIMARY KEY"
 
-if __name__ == "__main__":
-    loader = DWLoader()
-    loader.load_local()
+            cols_sql.append(f"    {col} {sql_type}")
+
+        sql_statements.append(
+            f"CREATE TABLE {table_name} (\n" + ",\n".join(cols_sql) + "\n);\n"
+        )
+
+    with open(os.path.join(WAREHOUSE_DIR, "schema.sql"), "w", encoding="utf-8") as f:
+        f.write("\n".join(sql_statements))
+
+def load_to_warehouse():
+    print("\n--- Starting Load (Staging -> Warehouse) ---")
+
+    file_mapping = {
+        "cleaned_date": "DimDate",
+        "cleaned_clients": "DimClient",
+        "cleaned_employees": "DimEmployee",
+        "cleaned_sales": "FactSales",
+    }
+
+    loaded_tables = {}
+
+    for csv_name, table_name in file_mapping.items():
+        path = os.path.join(STAGING_DIR, f"{csv_name}.csv")
+        if not os.path.exists(path):
+            print(f"⚠️ Missing staging file: {csv_name}.csv")
+            continue
+
+        df = pd.read_csv(path)
+        loaded_tables[table_name] = df
+
+        df.to_csv(os.path.join(WAREHOUSE_DIR, f"{table_name}.csv"), index=False)
+        df.to_parquet(os.path.join(WAREHOUSE_DIR, f"{table_name}.parquet"), index=False)
+
+        print(f"✅ {csv_name} -> {table_name} ({len(df)} rows)")
+
+    if loaded_tables:
+        generate_schema_sql(loaded_tables)
+
+    print("✅ Load Complete! Warehouse ready.")

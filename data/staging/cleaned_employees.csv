@@ -1,5 +1,5 @@
 sk_employee,bk_employee_id,employee_name,title,city,country,sales_region,territories
-1,,Nancy Freehafer,,Seattle,,No Region,No Territory
+1,,Nancy Freehafer,nan,Seattle,nan,No Region,No Territory
 2,1.0,Nancy Davolio,Sales Representative,Seattle,USA,Eastern,"Wilton, Neward"
 3,2.0,Andrew Fuller,"Vice President, Sales",Tacoma,USA,Eastern,"Westboro, Bedford, Georgetow, Boston, Cambridge, Braintree, Louisville"
 4,3.0,Janet Leverling,Sales Representative,Kirkland,USA,Southern,"Atlanta, Savannah, Orlando, Tampa"
